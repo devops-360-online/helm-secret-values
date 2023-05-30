@@ -1,0 +1,8 @@
+name: "secret-values"
+version: "0.1.0"
+usage: "Handle secret values for Helm charts"
+description: |-
+  This plugin allows you to handle secret values in Helm charts.
+command: "$HELM_PLUGIN_DIR/secret-values.sh"
+hooks:
+  install: "$HELM_PLUGIN_DIR/secret-values.sh --help"
