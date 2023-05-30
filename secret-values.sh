@@ -10,7 +10,7 @@ cat << EOF
 Replace placeholders in values file with secrets and run the Helm command.
 
 Usage:
-  helm secret-values <helm command> -f <values.yaml>
+  helm secret-values <helm command> -f <values.yaml> [-n namespace]
 
 Options:
   -q, --quiet          don't print headers
@@ -47,12 +47,14 @@ header() {
 # main
 
 QUIET=
+NAMESPACE=default
 
 while [[ $# -ne 0 ]]; do
   case "$1" in
     --quiet|-q)        QUIET=1  ;;
-    -*)          usage "Unrecognized command line argument $1" ;;
-    *)           break;
+    -n)                NAMESPACE="$2"; shift ;;
+    -*)                usage "Unrecognized command line argument $1" ;;
+    *)                 break;
   esac
   shift
 done
@@ -82,7 +84,7 @@ placeholders=$(grep -oP '{\K[^}]+' $3)
 for placeholder in $placeholders
 do
   # Fetch secret
-  secret=$(kubectl get secret my-secret -o jsonpath="{.data.$placeholder}" | base64 --decode)
+  secret=$(kubectl -n $NAMESPACE get secret my-secret -o jsonpath="{.data.$placeholder}" | base64 --decode)
 
   # Replace placeholder in temporary file
   sed -i "s/{$placeholder}/$secret/g" $temp_values
