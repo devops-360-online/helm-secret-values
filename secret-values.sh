@@ -51,15 +51,24 @@ NAMESPACE=default
 COMMAND=
 VALUES=
 
-declare -A FLAGS # Store other flags and their values here
-
-# Process all arguments
+# First pass: capture -n and -f flags
 while (( "$#" )); do
   case "$1" in
-    --quiet|-q)        QUIET=1  ;;
-    -n)                NAMESPACE="$2"; shift ;;
-    -f)                VALUES="$2"; shift ;;
-    *)                 COMMAND="$COMMAND $1" ;; # Concatenate other arguments into the command
+    -n) NAMESPACE="$2"; shift ;;
+    -f) VALUES="$2"; shift ;;
+  esac
+  shift
+done
+
+# Reset positional parameters
+set -- $COMMAND
+
+# Second pass: build the command
+while (( "$#" )); do
+  case "$1" in
+    --quiet|-q) QUIET=1  ;;
+    -n|-f) shift ;; # Skip -n and -f flags
+    *) COMMAND="$COMMAND $1" ;; # Concatenate other arguments into the command
   esac
   shift
 done
