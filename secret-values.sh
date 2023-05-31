@@ -48,19 +48,24 @@ header() {
 
 QUIET=
 NAMESPACE=default
+COMMAND=
+VALUES=
 
-while [[ $# -ne 0 ]]; do
+declare -A FLAGS # Store other flags and their values here
+
+# Process all arguments
+while (( "$#" )); do
   case "$1" in
     --quiet|-q)        QUIET=1  ;;
     -n)                NAMESPACE="$2"; shift ;;
-    -*)                usage "Unrecognized command line argument $1" ;;
-    *)                 break;
+    -f)                VALUES="$2"; shift ;;
+    *)                 COMMAND="$COMMAND $1" ;; # Concatenate other arguments into the command
   esac
   shift
 done
 
 # Check if Helm command and values file were provided
-if [ -z "$1" ] || [ "$2" != "-f" ] || [ -z "$3" ]
+if [ -z "$COMMAND" ] || [ -z "$VALUES" ]
 then
   header "Error"
   echo "Please call the plugin with 'helm secret-values <helm command> -f <values.yaml>'"
@@ -74,12 +79,12 @@ temp_values=$(mktemp)
 chmod 600 $temp_values
 
 # Make a copy of the values file
-cp $3 $temp_values
+cp $VALUES $temp_values
 
 header "Fetching and replacing secrets"
 
 # Find all placeholders enclosed within {}
-placeholders=$(grep -oP '{\K[^}]+' $3)
+placeholders=$(grep -oP '{\K[^}]+' $VALUES)
 
 for placeholder in $placeholders
 do
@@ -95,11 +100,8 @@ done
 
 header "Running Helm command"
 
-# Remove the first three arguments (Helm command, -f, and values.yaml) from the arguments list
-shift 3
-
 # Run the Helm command with the temporary values file
-"$1" -f "$temp_values" "$@"
+eval "helm $COMMAND -f $temp_values"
 
 header "Cleaning up"
 
