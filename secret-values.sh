@@ -83,8 +83,11 @@ placeholders=$(grep -oP '{\K[^}]+' $3)
 
 for placeholder in $placeholders
 do
+  # Split placeholder into secret name and key
+  IFS='.' read -r secret_name secret_key <<< "$placeholder"
+  
   # Fetch secret
-  secret=$(kubectl -n $NAMESPACE get secret my-secret -o jsonpath="{.data.$placeholder}" | base64 --decode)
+  secret=$(kubectl -n $NAMESPACE get secret $secret_name -o jsonpath="{.data.$secret_key}" | base64 --decode)
 
   # Replace placeholder in temporary file
   sed -i "s/{$placeholder}/$secret/g" $temp_values
