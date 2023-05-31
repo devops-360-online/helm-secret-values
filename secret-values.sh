@@ -51,23 +51,14 @@ NAMESPACE=default
 COMMAND=
 VALUES=
 
-# First pass: capture -n and -f flags
+# Parse the arguments
 while (( "$#" )); do
   case "$1" in
+    --quiet|-q) QUIET=1 ;;
     -n) NAMESPACE="$2"; shift ;;
     -f) VALUES="$2"; shift ;;
-  esac
-  shift
-done
-
-# Reset positional parameters
-set -- $COMMAND
-
-# Second pass: build the command
-while (( "$#" )); do
-  case "$1" in
-    --quiet|-q) QUIET=1  ;;
-    -n|-f) shift ;; # Skip -n and -f flags
+    install|upgrade) COMMAND="$COMMAND $1" ;; # Capturing 'install' or 'upgrade' as part of COMMAND
+    --install) COMMAND="$COMMAND $1" ;; # Capturing '--install' as part of COMMAND
     *) COMMAND="$COMMAND $1" ;; # Concatenate other arguments into the command
   esac
   shift
